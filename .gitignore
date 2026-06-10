@@ -1,0 +1,17 @@
+# Logs
+
+logs/*.log
+logs/*.pid
+
+# Python
+
+**pycache**/
+*.pyc
+
+# AWS / SSH
+
+*.pem
+
+# macOS
+
+.DS_Store
