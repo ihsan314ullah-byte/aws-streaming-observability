@@ -99,7 +99,7 @@ Stop FFmpeg:
 Go to API folder:
 
 ```bash
-cd api
+cd ~/streaming-demo/api
 docker build -t metrics-api .
 ```
 
@@ -116,6 +116,9 @@ docker run -d \
 ```
 
 The volume mount is critical — it connects Docker with host scripts and logs.
+
+## VERIFY CONTAINER
+docker ps
 
 ---
 
@@ -250,17 +253,5 @@ curl localhost:8000/metrics
 ```
 
 All outputs should match logically.
-
----
-
-# DONE
-
-If everything works:
-✔ FFmpeg running on host
-✔ Docker API running
-✔ Metrics correct
-✔ Status consistent across system
-
-```
 
 ---
