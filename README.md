@@ -82,6 +82,25 @@ streaming-demo/
  
 ---
 
+PROJECT DIRECTORY STRUCTURE
+
+```
+streaming-demo/
+├── README.md
+├── api/
+|   ├── Dockerfile
+│   ├── api.py
+│   ├── requirements.txt
+├── input/
+|   ├── tempest_input.mp4
+├── logs/
+|   ├──
+|   ├──
+└── scripts/
+    ├── start_ffmpeg.sh
+    ├── stop_ffmpeg.sh
+    └── status.sh
+
 ## Running the Project
 
 # For seemless execution on a fresh EC2 via ssh
@@ -111,11 +130,11 @@ chmod +x scripts/*.sh
 check via: ls -lh ~/streaming-demo/scripts/
 
 
-### STARTING Docker Metrics API
+### STARTING Docker Metrics PYTHON API
 
 This project runs a hybrid system:
 - FFmpeg runs on the EC2 host
-- FastAPI runs inside Docker
+- PYTHON FastAPI runs inside Docker
 - Both are connected via shared filesystem (volume mount)
 
 #### 1. Install Docker:
