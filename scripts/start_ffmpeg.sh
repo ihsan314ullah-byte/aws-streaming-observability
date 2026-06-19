@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ------------------------------------------------------------
-# START FFmpeg STREAMING PROCESS
+# START FFmpeg SRT Caller STREAMING PROCESS
 # ------------------------------------------------------------
 
 BASE_DIR=/home/ubuntu/streaming-demo
