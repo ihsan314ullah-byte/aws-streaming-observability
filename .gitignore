@@ -1,17 +1,11 @@
-# Logs
+__pycache__/
+*.pyc
 
 logs/*.log
 logs/*.pid
 
-# Python
+.env
 
-**pycache**/
-*.pyc
+.vscode/
 
-# AWS / SSH
-
-*.pem
-
-# macOS
-
-.DS_Store
+*.swp

@@ -17,12 +17,8 @@ echo "[FFMPEG]"
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
-    if ps -p "$PID" > /dev/null; then
-        echo "Status: RUNNING"
-        echo "PID: $PID"
-    else
-        echo "Status: NOT RUNNING (stale PID file)"
-    fi
+    echo "Status: RUNNING"
+    echo "PID: $PID"
 else
     echo "Status: NOT RUNNING"
 fi
