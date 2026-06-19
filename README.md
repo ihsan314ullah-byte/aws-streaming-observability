@@ -64,20 +64,8 @@ The player automatically switches between available bitrates based on network co
 ---
 
 ## Directory Structure
-└── streaming-demo
-    ├── api
-    │   ├── Dockerfile
-    │   ├── api.py
-    │   └── requirements.txt
-    ├── input
-    │   └── tempest_input.mp4
-    ├── logs
-    │   └── ffmpeg.log
-    └── scripts
-        ├── start_ffmpeg.sh
-        ├── status.sh
-        └── stop_ffmpeg.sh
 
+└── streaming-demo ├── api │   ├── Dockerfile │   ├── api.py │   └── requirements.txt ├── input │   └── tempest_input.mp4 ├── logs │   └── ffmpeg.log └── scripts ├── start_ffmpeg.sh ├── status.sh └── stop_ffmpeg.sh
 6 directories, 8 files
 
 streaming-demo/
@@ -91,7 +79,7 @@ streaming-demo/
 │ ├── stop_ffmpeg.sh
 │ └── status.sh
 └── README.md
-
+ 
 ---
 
 ## Running the Project
@@ -100,11 +88,13 @@ streaming-demo/
 sudo apt update
 sudo apt install git ffmpeg tree -y
 
-git clone https://github.com/ihsan314ullah-byte/Live-Streaming-Media-Pipeline
+git clone https://github.com/ihsan314ullah-byte/MPLStableDockerImage
 
-cd Live-Streaming-Media-Pipeline
+ls-lh
 
-mv Live-Streaming-Media-Pipeline ~/streaming-demo
+cd MPLStableDockerImage
+
+mv MPLStableDockerImage ~/streaming-demo
 
 cd ~/streaming-demo
 
@@ -112,25 +102,127 @@ tree -L 3
 
 make sure the ~/streaming-demo/logs exist, if not you will get errors in starting/stoping ffmpeg script
 and then make 
+
 mkdir -p logs
 
-ensure scripts are executiable via chmod +x scripts/*.sh
+ensure scripts are executiable via:
+chmod +x scripts/*.sh
 
-### Start Streaming
+check via: ls -lh ~/streaming-demo/scripts/
+
+
+### STARTING Docker Metrics API
+
+This project runs a hybrid system:
+- FFmpeg runs on the EC2 host
+- FastAPI runs inside Docker
+- Both are connected via shared filesystem (volume mount)
+
+#### 1. Install Docker:
+
+```bash
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker ubuntu
+```
+
+IMPORTANT: logout and login again after installing Docker.
+
+---
+
+#### 2. BUILD DOCKER IMAGE
+
+Go to API folder:
+
+```bash
+cd ~/streaming-demo/api
+docker build -t metrics-api .
+```
+#### 3. RUN DOCKER CONTAINER 
+
+```bash
+docker run -d \
+  --name metrics-api \
+  -p 8000:8000 \
+  -v /home/ubuntu/streaming-demo:/home/ubuntu/streaming-demo \
+  metrics-api
+```
+
+The volume mount is critical — it connects Docker with host scripts and logs.
+
+#### 4. VERIFY CONTAINER
+docker ps
+
+---
+Expected: metrics-api   Up
+
+#### 5. API ENDPOINTS
+
+##### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+
+```json
+{"status":"ok"}
+```
+
+---
+
+##### System Status
+
+```bash
+curl http://localhost:8000/status
+```
+
+Shows:
+
+* FFmpeg status
+* CPU usage
+* Memory usage
+* Disk usage
+* Internet connectivity
+
+---
+
+##### Metrics (Lightweight JSON)
+
+```bash
+curl http://localhost:8000/metrics
+```
+
+Response:
+
+```json
+{
+  "cpu_percent": "...",
+  "memory_percent": "...",
+  "ffmpeg": "running"
+}
+```
+
+---
+
+#### Start Streaming
 
 cd ~/streaming-demo/scripts
 
 ./start_ffmpeg.sh
 
-### Check Status
+#### Check Status
 
 ./status.sh
 
-### Stop Streaming
+#### Stop Streaming
 
 ./stop_ffmpeg.sh
 
 ---
+
 
 ## Verification
 
@@ -142,6 +234,19 @@ Successful operation is verified by:
 4. Adaptive bitrate switching is available.
 
 ---
+
+### FINAL VALIDATION
+
+Run all:
+
+```bash
+./scripts/status.sh
+curl localhost:8000/status
+curl localhost:8000/metrics
+```
+
+All outputs should match logically.
+
 
 ## Technical Decisions
 
