@@ -1,89 +1,118 @@
-# FastAPI framework for building APIs
 from fastapi import FastAPI
-
-# Used to run shell commands from Python (status.sh, top, free, etc.)
+from fastapi.responses import PlainTextResponse
 import subprocess
-
-# Used to check if FFmpeg PID file exists on disk
 import os
+import re
 
-# Create FastAPI application instance
 app = FastAPI()
 
 # ------------------------------------------------------------
-# PATH CONFIGURATION (SHARED WITH HOST VIA DOCKER VOLUME)
+# PATHS
 # ------------------------------------------------------------
 
-# Path to the host script that shows system status
-BASE = "/home/ubuntu/streaming-demo/scripts/status.sh"
-
-# Path to FFmpeg PID file (created by start_ffmpeg.sh)
+LOG_FILE = "/home/ubuntu/streaming-demo/logs/ffmpeg.log"
 PID_FILE = "/home/ubuntu/streaming-demo/logs/ffmpeg.pid"
 
 
 # ------------------------------------------------------------
-# HEALTH CHECK ENDPOINT
+# HELPERS
 # ------------------------------------------------------------
-# Simple test endpoint to verify API is running
+
+def run(cmd):
+    """Safe shell command runner"""
+    try:
+        return subprocess.getoutput(cmd)
+    except:
+        return ""
+
+
+def extract_ffmpeg_metrics():
+
+    bitrate = 0.0
+    speed = 0.0
+
+    if not os.path.exists(LOG_FILE):
+        return bitrate, speed
+
+    try:
+        with open(LOG_FILE, "r") as f:
+            log = f.read()
+
+        # --------------------------------------------------------
+        # BITRATE (last occurrence)
+        # Example: bitrate=4290.7kbits/s
+        # --------------------------------------------------------
+        bitrate_matches = re.findall(r'bitrate=\s*([\d\.]+)\s*kbits/s', log)
+        if bitrate_matches:
+            bitrate = float(bitrate_matches[-1])
+
+        # --------------------------------------------------------
+        # SPEED (last occurrence)
+        # Example: speed=1x
+        # --------------------------------------------------------
+        speed_matches = re.findall(r'speed=\s*([\d\.]+)x', log)
+        if speed_matches:
+            speed = float(speed_matches[-1])
+
+    except:
+        pass
+
+    return bitrate, speed
+
+
+# ------------------------------------------------------------
+# HEALTH
+# ------------------------------------------------------------
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
 # ------------------------------------------------------------
-# STATUS ENDPOINT (RUNS HOST SCRIPT)
+# METRICS
 # ------------------------------------------------------------
-@app.get("/status")
-def status():
 
-    # Runs the host script using bash
-    # This script outputs FFmpeg status, CPU, memory, disk, network
-    result = subprocess.run(
-        ["bash", BASE],
-        capture_output=True,   # capture output instead of printing
-        text=True              # return string instead of bytes
-    )
-
-    # Return script output inside JSON response
-    return {"output": result.stdout}
-
-
-# ------------------------------------------------------------
-# METRICS ENDPOINT (LIGHTWEIGHT SYSTEM + FFmpeg STATUS)
-# ------------------------------------------------------------
-@app.get("/metrics")
+@app.get("/metrics", response_class=PlainTextResponse)
 def metrics():
 
     # --------------------------------------------------------
-    # CPU USAGE
+    # SYSTEM METRICS
     # --------------------------------------------------------
-    # top -bn1 = single snapshot of CPU usage
-    # grep + awk extracts CPU idle/busy percentage
-    cpu = subprocess.getoutput(
-        "top -bn1 | grep 'Cpu(s)' | awk '{print $2+$4}'"
-    )
 
-    # --------------------------------------------------------
-    # MEMORY USAGE
-    # --------------------------------------------------------
-    # free -m gives memory in MB
-    # awk calculates percentage used
-    mem = subprocess.getoutput(
+    cpu = run("top -bn1 | grep 'Cpu(s)' | awk '{print $2+$4}'")
+
+    memory = run(
         "free -m | awk 'NR==2{printf \"%.2f\", $3*100/$2}'"
     )
 
     # --------------------------------------------------------
-    # FFmpeg STATUS (BASED ON PID FILE)
+    # FFMPEG STATE
     # --------------------------------------------------------
-    # We do NOT use pgrep because Docker cannot see host processes
-    # Instead we use PID file created by start_ffmpeg.sh
-    ffmpeg_running = os.path.exists(PID_FILE)
+
+    ffmpeg_running = 1 if os.path.exists(PID_FILE) else 0
 
     # --------------------------------------------------------
-    # FINAL RESPONSE
+    # STREAM QUALITY METRICS (FROM LOG)
     # --------------------------------------------------------
-    return {
-        "cpu_percent": cpu,
-        "memory_percent": mem,
-        "ffmpeg": "running" if ffmpeg_running else "stopped"
-    }
+
+    bitrate, speed = extract_ffmpeg_metrics()
+
+    # --------------------------------------------------------
+    # SRT ACTIVITY (basic heuristic)
+    # --------------------------------------------------------
+
+    srt_active = 1 if run("ss -anu | grep ':5000'") else 0
+
+    # --------------------------------------------------------
+    # OUTPUT PROMETHEUS FORMAT
+    # --------------------------------------------------------
+
+    return (
+        f"cpu_usage_percent {cpu}\n"
+        f"memory_usage_percent {memory}\n"
+        f"ffmpeg_running {ffmpeg_running}\n"
+        f"ffmpeg_bitrate_kbps {bitrate}\n"
+        f"ffmpeg_speed {speed}\n"
+        f"srt_active {srt_active}\n"
+    )

@@ -1,11 +1,7 @@
+logs/
+*.log
+*.pid
 __pycache__/
 *.pyc
-
-logs/*.log
-logs/*.pid
-
 .env
-
-.vscode/
-
-*.swp
+input/
