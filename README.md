@@ -1,7 +1,7 @@
 # 📄 `README.md`
 
 ```md
-# 🎥 AWS Media Streaming + Observability Pipeline
+# AWS Media Streaming + Observability Pipeline
 
 This project implements a **real-time video streaming pipeline** on AWS with full **observability using FastAPI, Prometheus, and Grafana-ready metrics**.
 
@@ -9,7 +9,7 @@ It demonstrates how a live video stream can be ingested, transported, monitored,
 
 ---
 
-# 🚀 What This Project Does
+# What This Project Does
 
 The system:
 
@@ -24,7 +24,7 @@ The system:
 
 ---
 
-# 🧱 Architecture Overview
+# Architecture Overview
 
 ```
 
@@ -60,7 +60,7 @@ Grafana Visualization (future step)
 
 ---
 
-# 📦 Project Structure
+# Project Structure
 
 ```
 
@@ -88,7 +88,7 @@ streaming-demo/
 
 ---
 
-# ⚙️ Core Components Explained
+# Core Components Explained
 
 ## 1. FFmpeg Streaming Engine
 
@@ -151,7 +151,7 @@ Handles cloud-side streaming:
 
 ---
 
-# 📊 Metrics Available
+# Metrics Available
 
 Example output:
 
@@ -166,7 +166,7 @@ srt_active 1
 
 ---
 
-# 🧠 Key Design Idea
+# Key Design Idea
 
 This project separates:
 
@@ -180,7 +180,7 @@ This project separates:
 
 ---
 
-# 🛠️ How to Run on a Fresh EC2
+# How to Run on a Fresh EC2
 
 ## 1. Clone repository
 
@@ -264,7 +264,7 @@ http://<EC2-IP>:9090
 
 ---
 
-# 📈 Future Enhancements
+# Future Enhancements
 
 * Grafana dashboards (stream health visualization)
 * Alerting rules (stream failure detection)
@@ -274,7 +274,7 @@ http://<EC2-IP>:9090
 
 ---
 
-# 🧪 What This Project Demonstrates
+# What This Project Demonstrates
 
 * Live video streaming over SRT
 * AWS media pipeline architecture
@@ -285,7 +285,7 @@ http://<EC2-IP>:9090
 
 ---
 
-# 👨‍💻 Author Notes
+# Author Notes
 
 This project was built as a **hands-on streaming + observability system** combining:
 
