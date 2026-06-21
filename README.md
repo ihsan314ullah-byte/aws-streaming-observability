@@ -181,29 +181,50 @@ This project separates:
 ---
 
 # How to Run on a Fresh EC2
+sudo apt update
+sudo apt install git ffmpeg tree -y
 
 ## 1. Clone repository
 
 ```bash
-git clone https://github.com/<your-username>/aws-streaming-observability.git
-cd streaming-demo
+git clone https://github.com/ihsan314ullah-byte/aws-streaming-observability.git
+ls-lh
+mv aws-streaming-observability ~/streaming-demo
+cd ~/streaming-demo
+tree -L 3
+
+make sure the ~/streaming-demo/logs exist, if not you will get errors in starting/stoping ffmpeg script and then make
+mkdir -p logs
+
+ensure scripts are executiable via: chmod +x scripts/*.sh
+check via: ls -lh ~/streaming-demo/scripts/
+
 ```
 
 ---
 
-## 2. Install system dependencies
+## 2. Install docker dependency
 
 ```bash
-sudo apt update
-sudo apt install ffmpeg docker.io -y
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker ubuntu
 ```
 
+IMPORTANT: logout and login again after installing Docker.
+
 ---
+### Create Docker network (important)
+
+```bash
+docker network create streaming-net
+```
 
 ## 3. Start FastAPI metrics container
 
 ```bash
-cd api
+cd ~/streaming-demo/api
 
 docker build -t metrics-api .
 ```
@@ -219,15 +240,7 @@ metrics-api
 
 ---
 
-## 4. Create Docker network
-
-```bash
-docker network create streaming-net
-```
-
----
-
-## 5. Run Prometheus
+## 4. Start/Run Prometheus
 
 ```bash
 docker run -d \
@@ -240,7 +253,7 @@ prom/prometheus
 
 ---
 
-## 6. Start streaming
+## 5. Start streaming
 
 ```bash
 bash scripts/start_ffmpeg.sh
@@ -248,7 +261,7 @@ bash scripts/start_ffmpeg.sh
 
 ---
 
-## 7. Verify system
+## 6. Verify system
 
 ### API:
 
