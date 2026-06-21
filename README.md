@@ -1,325 +1,299 @@
-# Project: The Eye of the Storm Inititave
-## Adaptive Video Streaming Pipeline on AWS
+# 📄 `README.md`
 
-## Overview
+```md
+# 🎥 AWS Media Streaming + Observability Pipeline
 
-This project implements an adaptive bitrate (ABR) video streaming pipeline using AWS Media Services and FFmpeg.
+This project implements a **real-time video streaming pipeline** on AWS with full **observability using FastAPI, Prometheus, and Grafana-ready metrics**.
 
-The system ingests a local MP4 file from an Amazon EC2 instance, transmits the stream via SRT, performs cloud-based transcoding and packaging, and delivers adaptive MPEG-DASH playback.
-
----
-
-## Architecture
-
-EC2-FFmpeg(SRT-Caller) -> AWS MediaConnect (SRT Listener) -> AWS MediaLive -> AWS MediaPackage -> DASH Player
+It demonstrates how a live video stream can be ingested, transported, monitored, and analyzed end-to-end using modern cloud and DevOps tools.
 
 ---
 
-## Components
+# 🚀 What This Project Does
 
-### FFmpeg
+The system:
 
-FFmpeg runs on an Ubuntu EC2 instance and continuously loops a local MP4 file.
-
-Responsibilities:
-
-* Read source video
-* Stream via SRT-Caller mode
-* Send MPEG-TS transport stream to AWS MediaConnect
-
-### AWS MediaConnect
-
-Acts as the SRT ingest endpoint.
-
-Responsibilities:
-
-* Receive SRT stream via SRT Listener mode
-* Forward stream to MediaLive
-
-### AWS MediaLive
-
-Performs cloud transcoding.
-
-Generated renditions:
-
-* 1080p
-* 720p
-* 480p
-
-### AWS MediaPackage
-
-Packages transcoded outputs into MPEG-DASH format.
-
-### DASH Player
-
-Used to verify adaptive playback.
-
-provided by AWS, might be down in-case if the MediaPipe Line is in off state
-
-Can be selected from the Media Channel DASH endpoint preview, or by directly accessing the following url in any browser, and click "Load"
-https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html?mpd=https://ccf3786b925ee51c.mediapackage.us-east-1.amazonaws.com/out/v1/04e44707aa714630842e42bd6f546afe/index.mpd
-
-The player automatically switches between available bitrates based on network conditions.
+- Streams a video file using **FFmpeg (SRT caller mode)**
+- Sends stream to **AWS MediaConnect**
+- Processes via **AWS MediaLive**
+- Packages via **AWS MediaPackage**
+- Delivers via **DASH ABR Player**
+- Exposes **real-time system + streaming metrics**
+- Provides **Prometheus-compatible metrics endpoint**
+- Enables future **Grafana dashboards for visualization**
 
 ---
 
-## PROJECT DIRECTORY STRUCTURE
+# 🧱 Architecture Overview
+
+```
+
+MP4 File
+↓
+FFmpeg (SRT Caller on EC2)
+↓
+SRT (UDP 5000)
+↓
+AWS MediaConnect
+↓
+AWS MediaLive
+↓
+AWS MediaPackage
+↓
+DASH Player (ABR Streaming)
+
+```
+
+Parallel Observability Pipeline:
+
+```
+
+FFmpeg Logs + System Metrics
+↓
+FastAPI (/metrics endpoint)
+↓
+Prometheus Scraping
+↓
+Grafana Visualization (future step)
+
+````
+
+---
+
+# 📦 Project Structure
+
+```
 
 streaming-demo/
-├── README.md
 ├── api/
-|   ├── Dockerfile
-│   ├── api.py
-│   ├── requirements.txt
-├── input/
-|   ├── tempest_input.mp4
+│   ├── api.py              # FastAPI metrics exporter
+│   ├── requirements.txt    # Python dependencies
+│   ├── Dockerfile          # Container for API
+│
+├── scripts/
+│   ├── start\_ffmpeg.sh     # Start SRT streaming
+│   ├── stop\_ffmpeg.sh      # Stop streaming
+│   ├── status.sh           # System + stream diagnostics
+│
+├── prometheus/
+│   └── prometheus.yml      # Prometheus scrape config
+│
 ├── logs/
-|   ├── ffmpeg.log
-|   ├── ffmpeg.pid
-└── scripts/
-    ├── start_ffmpeg.sh
-    ├── stop_ffmpeg.sh
-    └── status.sh
-
-## Running the Project
-
-# For seemless execution on a fresh EC2 via ssh
-sudo apt update
-sudo apt install git ffmpeg tree -y
-
-git clone https://github.com/ihsan314ullah-byte/MPLStableDockerImage
-
-ls-lh
-
-cd MPLStableDockerImage
-
-mv MPLStableDockerImage ~/streaming-demo
-
-cd ~/streaming-demo
-
-tree -L 3
-
-make sure the ~/streaming-demo/logs exist, if not you will get errors in starting/stoping ffmpeg script
-and then make 
-
-mkdir -p logs
-
-ensure scripts are executiable via:
-chmod +x scripts/*.sh
-
-check via: ls -lh ~/streaming-demo/scripts/
-
-
-### STARTING Docker Metrics PYTHON API
-
-This project runs a hybrid system:
-- FFmpeg runs on the EC2 host
-- PYTHON FastAPI runs inside Docker
-- Both are connected via shared filesystem (volume mount)
-
-#### 1. Install Docker:
-
-```bash
-sudo apt install -y docker.io
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -aG docker ubuntu
-```
-
-IMPORTANT: logout and login again after installing Docker.
+│   ├── ffmpeg.log          # FFmpeg runtime logs
+│   ├── ffmpeg.pid          # Process tracking
+│
+├── input/
+│   └── tempest\_input.mp4   # Input video file
+````
 
 ---
 
-#### 2. BUILD DOCKER IMAGE
+# ⚙️ Core Components Explained
 
-Go to API folder:
+## 1. FFmpeg Streaming Engine
+
+* Reads local MP4 file
+* Streams via **SRT protocol (caller mode)**
+* Sends encoded MPEG-TS stream to AWS MediaConnect
+* Logs performance metrics to `ffmpeg.log`
+
+### Key Metrics:
+
+* bitrate
+* speed (real-time processing rate)
+* stream stability
+
+---
+
+## 2. FastAPI Metrics Service
+
+Exposes system + streaming metrics at:
+
+```
+http://<EC2-IP>:8000/metrics
+```
+
+### Metrics exposed:
+
+* CPU usage
+* Memory usage
+* FFmpeg running state
+* FFmpeg bitrate
+* FFmpeg speed
+* SRT port activity
+
+This acts as a **custom Prometheus exporter**.
+
+---
+
+## 3. Prometheus
+
+* Scrapes FastAPI `/metrics`
+* Stores time-series data
+* Enables querying and alerting
+
+Default UI:
+
+```
+http://<EC2-IP>:9090
+```
+
+---
+
+## 4. AWS Media Pipeline
+
+Handles cloud-side streaming:
+
+* MediaConnect → transport layer
+* MediaLive → processing / transcoding
+* MediaPackage → packaging for playback
+* DASH Player → final viewer
+
+---
+
+# 📊 Metrics Available
+
+Example output:
+
+```
+cpu_usage_percent 3.2
+memory_usage_percent 16.1
+ffmpeg_running 1
+ffmpeg_bitrate_kbps 4290.7
+ffmpeg_speed 1.0
+srt_active 1
+```
+
+---
+
+# 🧠 Key Design Idea
+
+This project separates:
+
+| Layer              | Purpose              |
+| ------------------ | -------------------- |
+| FFmpeg             | Streaming engine     |
+| AWS Media Services | Cloud video pipeline |
+| FastAPI            | Metrics exporter     |
+| Prometheus         | Time-series storage  |
+| Grafana (future)   | Visualization        |
+
+---
+
+# 🛠️ How to Run on a Fresh EC2
+
+## 1. Clone repository
 
 ```bash
-cd ~/streaming-demo/api
+git clone https://github.com/<your-username>/aws-streaming-observability.git
+cd streaming-demo
+```
+
+---
+
+## 2. Install system dependencies
+
+```bash
+sudo apt update
+sudo apt install ffmpeg docker.io -y
+```
+
+---
+
+## 3. Start FastAPI metrics container
+
+```bash
+cd api
+
 docker build -t metrics-api .
 ```
-#### 3. RUN DOCKER CONTAINER 
 
 ```bash
 docker run -d \
-  --name metrics-api \
-  -p 8000:8000 \
-  -v /home/ubuntu/streaming-demo:/home/ubuntu/streaming-demo \
-  metrics-api
+--name metrics-api \
+--network streaming-net \
+-p 8000:8000 \
+-v /home/ubuntu/streaming-demo:/home/ubuntu/streaming-demo \
+metrics-api
 ```
 
-The volume mount is critical — it connects Docker with host scripts and logs.
-
-#### 4. VERIFY CONTAINER
-docker ps
-
 ---
-Expected: metrics-api   Up
 
-#### 5. API ENDPOINTS
-
-##### Health Check
+## 4. Create Docker network
 
 ```bash
-curl http://localhost:8000/health
-```
-
-Response:
-
-```json
-{"status":"ok"}
+docker network create streaming-net
 ```
 
 ---
 
-##### System Status
+## 5. Run Prometheus
 
 ```bash
-curl http://localhost:8000/status
+docker run -d \
+--name prometheus \
+--network streaming-net \
+-p 9090:9090 \
+-v ~/streaming-demo/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
+prom/prometheus
 ```
-
-Shows:
-
-* FFmpeg status
-* CPU usage
-* Memory usage
-* Disk usage
-* Internet connectivity
 
 ---
 
-##### Metrics (Lightweight JSON)
+## 6. Start streaming
 
 ```bash
-curl http://localhost:8000/metrics
-```
-
-Response:
-
-```json
-{
-  "cpu_percent": "...",
-  "memory_percent": "...",
-  "ffmpeg": "running"
-}
+bash scripts/start_ffmpeg.sh
 ```
 
 ---
 
-#### Start Streaming
+## 7. Verify system
 
-cd ~/streaming-demo/scripts
+### API:
 
-./start_ffmpeg.sh
-
-#### Check Status
-
-./status.sh
-
-#### Stop Streaming
-
-./stop_ffmpeg.sh
-
----
-
-
-## Verification
-
-Successful operation is verified by:
-
-1. AWS MediaConnect status changes to CONNECTED.
-2. AWS MediaLive channel receives healthy input.
-3. AWS DASH player displays video.
-4. Adaptive bitrate switching is available.
-
----
-
-### FINAL VALIDATION
-
-Run all:
-
-```bash
-./scripts/status.sh
-curl localhost:8000/status
-curl localhost:8000/metrics
+```
+http://<EC2-IP>:8000/metrics
 ```
 
-All outputs should match logically.
+### Prometheus:
 
-
-## Technical Decisions
-
-### Why SRT?
-
-SRT provides:
-
-* Reliable transport
-* Low latency
-* Packet loss recovery
-
-### Why AWS Media Services?
-
-AWS Media Services provide managed:
-
-* Ingest
-* Transcoding
-* Packaging
-* Streaming
-
-without requiring self-managed streaming infrastructure.
-
-### Why FFmpeg ?
-* Open source
-* High performance
-* used by major streaming providers like Youtube, NetFlix, TikTok etc.
-
-#### Why FFmpeg Copy Mode?
-
-The EC2 instance uses: -c copy
-
-This minimizes CPU usage by avoiding local transcoding.
-
-Transcoding is delegated to AWS MediaLive.
+```
+http://<EC2-IP>:9090
+```
 
 ---
 
-## Scalability
+# 📈 Future Enhancements
 
-The architecture can scale by:
-
-* Increasing MediaLive output renditions
-* Using CloudFront CDN in front of MediaPackage
-* Deploying multiple ingest points
-* Using Auto Scaling for ingest instances
-
----
-
-## Cost Considerations
-
-Primary cost drivers:
-
-* MediaLive channel runtime -> main cost driving factor
-* MediaConnect flow runtime
-* MediaPackage egress traffic
-* EC2 instance runtime -> The EC2 ingest instance has minimal compute requirements because transcoding occurs in AWS MediaLive.
+* Grafana dashboards (stream health visualization)
+* Alerting rules (stream failure detection)
+* AWS CloudWatch integration
+* Multi-stream ingestion
+* Real-time QoE scoring
 
 ---
 
-## Future Improvements
+# 🧪 What This Project Demonstrates
 
-* Dockerized monitoring API
-* JWT authentication
-* Prometheus metrics
-* CI/CD pipeline
-* Infrastructure as Code (Terraform)
+* Live video streaming over SRT
+* AWS media pipeline architecture
+* Observability engineering
+* Prometheus custom exporter design
+* Log-based metric extraction
+* DevOps + streaming integration
 
 ---
 
-## Demonstration
+# 👨‍💻 Author Notes
 
-The project successfully demonstrates:
+This project was built as a **hands-on streaming + observability system** combining:
 
-* Video ingest
-* Adaptive bitrate transcoding
-* MPEG-DASH delivery
-* End-to-end playback through AWS Media Services
+* Media engineering
+* Cloud infrastructure (AWS)
+* DevOps monitoring
+* Real-time metrics design
+
+```
+
+---
