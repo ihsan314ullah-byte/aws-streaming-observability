@@ -1,4 +1,4 @@
-# 📄 `README.md`
+#  README.md
 
 ```md
 # AWS Media Streaming + Observability Pipeline
@@ -225,7 +225,6 @@ docker network create streaming-net
 
 ```bash
 cd ~/streaming-demo/api
-
 docker build -t metrics-api .
 ```
 
@@ -253,6 +252,17 @@ prom/prometheus
 
 ---
 
+## 5.  Grafana Setup (Docker)
+
+```bash
+docker run -d \
+--name grafana \
+--network streaming-net \
+-p 3000:3000 \
+grafana/grafana
+````
+---
+
 ## 5. Start streaming
 
 ```bash
@@ -275,11 +285,17 @@ http://<EC2-IP>:8000/metrics
 http://<EC2-IP>:9090
 ```
 
+### Grafana UI Access
+
+Open in browser:
+
+```text
+http://<EC2-PUBLIC-IP>:3000
+```
 ---
 
 # Future Enhancements
 
-* Grafana dashboards (stream health visualization)
 * Alerting rules (stream failure detection)
 * AWS CloudWatch integration
 * Multi-stream ingestion
@@ -295,6 +311,7 @@ http://<EC2-IP>:9090
 * Prometheus custom exporter design
 * Log-based metric extraction
 * DevOps + streaming integration
+* Grafana dashboards (stream health visualization)
 
 ---
 
