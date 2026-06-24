@@ -18,50 +18,26 @@ The system:
 - Delivers via **DASH ABR Player**
 - Exposes **real-time system + streaming metrics**
 - Provides **Prometheus-compatible metrics endpoint**
-- Enables future **Grafana dashboards for visualization**
+- Enables **Grafana dashboards for visualization**
 
 ---
 
 # Architecture Overview
 
-```
+## General Streaming Flow:
 
-MP4 File
-↓
-FFmpeg (SRT Caller on EC2)
-↓
-SRT (UDP 5000)
-↓
-AWS MediaConnect
-↓
-AWS MediaLive
-↓
-AWS MediaPackage
-↓
-DASH Player (ABR Streaming)
+EC2-FFmpeg(SRT Caller) -> MP4 File -> AWS MediaConnect(SRT Listener) -> AWS MediaLive -> AWS MediaPackage -> DASH Player endpoints(ABR Ladder)
 
-```
 
-Parallel Observability Pipeline:
+## Prallel Observability Pipeline:
 
-```
-
-FFmpeg Logs + System Metrics
-↓
-FastAPI (/metrics endpoint)
-↓
-Prometheus Scraping
-↓
-Grafana Visualization (future step)
-
-````
+FFmpeg Logs + System Metrics -> FastAPI (/metrics endpoint) -> Prometheus Scraping -> Grafana Visualization 
 
 ---
 
 # Project Structure
 
 ```
-
 streaming-demo/
 ├── api/
 │   ├── api.py              # FastAPI metrics exporter
@@ -80,8 +56,8 @@ streaming-demo/
 │   ├── ffmpeg.log          # FFmpeg runtime logs
 │   ├── ffmpeg.pid          # Process tracking
 │
-├── input/
-│   └── tempest\_input.mp4   # Input video file
+└── input/
+    └── tempest\_input.mp4   # Input video file
 ````
 
 ---
@@ -179,8 +155,12 @@ This project separates:
 ---
 
 # How to Run on a Fresh EC2
+```bash
 sudo apt update
+
 sudo apt install git ffmpeg tree -y
+```
+
 
 ## 1. Clone repository
 
