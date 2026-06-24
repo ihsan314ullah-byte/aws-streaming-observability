@@ -1,6 +1,4 @@
 #  README.md
-
-```md
 # AWS Media Streaming + Observability Pipeline
 
 This project implements a **real-time video streaming pipeline** on AWS with full **observability using FastAPI, Prometheus, and Grafana-ready metrics**.
